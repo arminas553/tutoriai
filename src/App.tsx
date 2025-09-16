@@ -17,10 +17,10 @@ import {
   X,
 } from "lucide-react";
 
-// ---------- helpers ----------
+// ---------------- helpers ----------------
 function pad2(n: number) { return String(n).padStart(2, "0"); }
-export function toKey(date: Date) { return `${date.getFullYear()}-${pad2(date.getMonth()+1)}-${pad2(date.getDate())}`; }
-export function generateMonthDays(year: number, month: number) {
+function toKey(date: Date) { return `${date.getFullYear()}-${pad2(date.getMonth()+1)}-${pad2(date.getDate())}`; }
+function generateMonthDays(year: number, month: number) {
   const first = new Date(year, month, 1);
   const startDay = (first.getDay() + 6) % 7; // 0=Mon
   const daysInMonth = new Date(year, month+1, 0).getDate();
@@ -31,7 +31,7 @@ export function generateMonthDays(year: number, month: number) {
   return cells;
 }
 
-// ---------- sample data ----------
+// ------------- demo data -------------
 const SUBJECTS = ["Matematika","Fizika","Chemija","Biologija","Anglų kalba","Istorija","Informatika","Ekonomika","Dailė","Muzika"];
 const LEVELS = ["Pradinė","Pagrindinė","Vidurinė","Universitetas","Profesionalams"];
 
@@ -42,7 +42,7 @@ const TUTORS = [
   { id:4, name:"Marco Rossi", rating:4.7, reviews:54, subject:"Informatika", levels:["Vidurinė","Universitetas","Profesionalams"], price:40, location:"Nuotoliu • Milanas, IT", bio:"Full-stack mentorystė. Algoritmai, projektai ir kodo peržiūros.", avatar:"https://images.unsplash.com/photo-1502685104226-ee32379fefbe?q=80&w=400&auto=format&fit=crop", availabilityDemo:{"2025-09-18":["09:00","14:00","20:00"]}},
 ];
 
-// ---------- small UI bits ----------
+// ------------- simple UI atoms -------------
 const Badge = ({ children }: { children: React.ReactNode }) => (
   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-200">{children}</span>
 );
@@ -64,8 +64,24 @@ const Section = ({ id, title, subtitle, children }:{ id?: string, title: string,
   </section>
 );
 
-// ---------- nav ----------
-function NavBar({ onOpenSignup }: { onOpenSignup: () => void }){
+// ---------------- registration storage (demo/localStorage) ----------------
+type Role = "student" | "teacher";
+type User = { name: string; email: string; role: Role };
+const USERS_KEY = "tutoriai.users";
+const CURRENT_KEY = "tutoriai.currentUser";
+
+function saveUser(u: User){
+  const arr: User[] = JSON.parse(localStorage.getItem(USERS_KEY)||"[]");
+  arr.push(u);
+  localStorage.setItem(USERS_KEY, JSON.stringify(arr));
+  localStorage.setItem(CURRENT_KEY, JSON.stringify(u));
+}
+function loadCurrentUser(): User | null {
+  try { return JSON.parse(localStorage.getItem(CURRENT_KEY) || "null"); } catch { return null; }
+}
+
+// ---------------- nav ----------------
+function NavBar({ onOpenSignup, current }: { onOpenSignup: () => void, current: User | null }){
   return (
     <div className="w-full sticky top-0 z-40 border-b bg-white/70 dark:bg-gray-950/70 backdrop-blur">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -80,7 +96,13 @@ function NavBar({ onOpenSignup }: { onOpenSignup: () => void }){
           <a href="#faq" className="hover:underline underline-offset-4">DUK</a>
         </div>
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1.5 text-sm rounded-xl border">Prisijungti</button>
+          {current ? (
+            <span className="text-xs md:text-sm px-3 py-1.5 rounded-xl border">
+              Sveiki, {current.name} ({current.role === "teacher" ? "Korepetitorius" : "Mokinys"})
+            </span>
+          ) : (
+            <button className="px-3 py-1.5 text-sm rounded-xl border">Prisijungti</button>
+          )}
           <button onClick={onOpenSignup} className="px-3 py-1.5 text-sm rounded-xl bg-black text-white">Registruotis</button>
         </div>
       </div>
@@ -88,7 +110,7 @@ function NavBar({ onOpenSignup }: { onOpenSignup: () => void }){
   );
 }
 
-// ---------- hero (promo juosta pašalinta) ----------
+// ---------------- hero (promo strip removed) ----------------
 function Hero({ onSearch }:{ onSearch:(v:any)=>void }){
   const [query, setQuery] = useState("");
   const [subject, setSubject] = useState("");
@@ -140,19 +162,16 @@ function Hero({ onSearch }:{ onSearch:(v:any)=>void }){
   );
 }
 
-// ---------- calendar ----------
-const DEFAULT_TIMES = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"];
-
-function CalendarInline({ mode, availability, onToggle, onBook }:{
-  mode:"tutor"|"student",
+// ---------------- calendar (student view only) ----------------
+function CalendarInline({ availability, onBook }:{
   availability:Record<string,string[]>,
-  onToggle:(dayKey:string, time:string)=>void,
   onBook:(dayKey:string, time:string)=>void
 }){
   const today = new Date();
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [hoverDay, setHoverDay] = useState<Date|null>(null);
   const [selected, setSelected] = useState<Date|null>(null);
+
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
   const cells = generateMonthDays(year, month);
@@ -163,6 +182,7 @@ function CalendarInline({ mode, availability, onToggle, onBook }:{
 
   return (
     <div className="grid md:grid-cols-2 gap-4">
+      {/* left: calendar */}
       <div className="relative rounded-2xl border p-4">
         <div className="flex items-center justify-between mb-3">
           <button className="px-2 py-1 rounded-lg border" onClick={()=>setCursor(new Date(year, month-1, 1))}>←</button>
@@ -187,6 +207,7 @@ function CalendarInline({ mode, availability, onToggle, onBook }:{
           })}
         </div>
 
+        {/* hover popover with times */}
         {hoverDay && timesForHover && timesForHover.length>0 ? (
           <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 bg-white dark:bg-gray-900 border rounded-xl shadow-lg p-3 text-sm pointer-events-none" role="tooltip" aria-live="polite">
             <div className="font-medium mb-1">{hoverDay.toLocaleDateString('lt-LT',{day:'2-digit', month:'long'})}</div>
@@ -197,22 +218,24 @@ function CalendarInline({ mode, availability, onToggle, onBook }:{
         ) : null}
       </div>
 
+      {/* right: times for selected day */}
       <div className="rounded-2xl border p-4">
         <div className="flex items-center justify-between">
           <h4 className="font-medium">{selected ? selected.toLocaleDateString('lt-LT',{weekday:'long',day:'2-digit',month:'long'}) : 'Pasirinkite dieną'}</h4>
-          {selected && mode==='tutor' && (<button className="text-xs underline" onClick={()=> selKey && onToggle(selKey,'clear')}>Išvalyti dieną</button>)}
         </div>
-        {!selected ? (<p className="text-sm text-gray-600 dark:text-gray-300 mt-2">Spustelėkite kalendoriuje dieną.</p>) : (
+        {!selected ? (
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">Spustelėkite kalendoriuje dieną.</p>
+        ) : (
           <div className="mt-3 flex flex-wrap gap-2">
-            {(mode==='tutor' ? DEFAULT_TIMES : (availability[selKey!]||[])).map(t=>{
-              const active = (availability[selKey!]||[]).includes(t);
-              return (
-                <button key={t} onClick={()=> mode==='tutor' && selKey ? onToggle(selKey,t) : selKey ? onBook(selKey,t) : null}
-                  className={`px-3 py-1 rounded-xl text-sm border ${active? 'bg-black text-white':'bg-gray-50 dark:bg-gray-800'}`}>
-                  {t}{mode==='student' && active && <span className="ml-1 text-[10px] opacity-70">· Rezervuoti</span>}
-                </button>
-              );
-            })}
+            {(availability[selKey!]||[]).map(t=>(
+              <button key={t} onClick={()=> selKey && onBook(selKey, t)}
+                className="px-3 py-1 rounded-xl text-sm border bg-gray-50 dark:bg-gray-800">
+                {t}<span className="ml-1 text-[10px] opacity-70">· Rezervuoti</span>
+              </button>
+            ))}
+            {(availability[selKey!]||[]).length===0 && (
+              <span className="text-sm text-gray-500">Šiai dienai laikų nėra.</span>
+            )}
           </div>
         )}
       </div>
@@ -220,29 +243,13 @@ function CalendarInline({ mode, availability, onToggle, onBook }:{
   );
 }
 
-// ---------- tutor dialog ----------
+// ---------------- tutor dialog (no role toggle) ----------------
 function TutorDialog({ tutor, onClose }:{ tutor: typeof TUTORS[number] | null, onClose:()=>void }){
-  const [mode, setMode] = useState<"student"|"tutor">("student");
-  const [availability, setAvailability] = useState<Record<string,string[]>>(tutor?.availabilityDemo || {});
-
-  useEffect(()=>{
-    function onKey(e: KeyboardEvent){ if(e.key==='Escape') onClose(); }
-    window.addEventListener('keydown', onKey);
-    return ()=> window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   if(!tutor) return null;
 
-  function toggleSlot(dayKey: string, time: string){
-    if(!dayKey) return;
-    if(time==='clear'){ setAvailability(prev=>{ const n={...prev}; delete n[dayKey]; return n; }); return; }
-    setAvailability(prev=>{
-      const cur = new Set(prev[dayKey]||[]);
-      if(cur.has(time)) cur.delete(time); else cur.add(time);
-      return { ...prev, [dayKey]: Array.from(cur).sort() };
-    });
+  function bookSlot(dayKey: string, time: string){
+    alert(`Rezervuota ${tutor!.name}: ${dayKey} ${time}`);
   }
-  function bookSlot(dayKey: string, time: string){ if(!dayKey||!time) return; alert(`Rezervuota ${tutor!.name}: ${dayKey} ${time}`); }
 
   return (
     <AnimatePresence>
@@ -251,38 +258,29 @@ function TutorDialog({ tutor, onClose }:{ tutor: typeof TUTORS[number] | null, o
         <motion.div className="relative z-10 w-full md:max-w-3xl bg-white dark:bg-gray-950 rounded-t-3xl md:rounded-3xl border p-6" initial={{ y:40, opacity:0 }} animate={{ y:0, opacity:1 }} exit={{ y:40, opacity:0 }}>
           <button onClick={onClose} className="absolute right-3 top-3 p-2 rounded-xl border" aria-label="Užverti"><X className="h-4 w-4"/></button>
           <div className="flex items-start gap-4">
-            <img src={tutor!.avatar} alt={tutor!.name} className="h-16 w-16 rounded-2xl object-cover"/>
+            <img src={tutor.avatar} alt={tutor.name} className="h-16 w-16 rounded-2xl object-cover"/>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="font-semibold text-lg">{tutor!.name}</h3>
-                <div className="inline-flex items-center gap-1 text-sm"><Star className="h-4 w-4 fill-yellow-400 text-yellow-400"/><span>{tutor!.rating}</span><span className="text-gray-500">({tutor!.reviews})</span></div>
+                <h3 className="font-semibold text-lg">{tutor.name}</h3>
+                <div className="inline-flex items-center gap-1 text-sm"><Star className="h-4 w-4 fill-yellow-400 text-yellow-400"/><span>{tutor.rating}</span><span className="text-gray-500">({tutor.reviews})</span></div>
               </div>
-              <div className="mt-1 flex flex-wrap items-center gap-2"><Badge>{tutor!.subject}</Badge>{tutor!.levels.map(l=> <Pill key={l}>{l}</Pill>)}</div>
-              <p className="mt-3 text-sm text-gray-700 dark:text-gray-200">{tutor!.bio}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2"><Badge>{tutor.subject}</Badge></div>
+              <p className="mt-3 text-sm text-gray-700 dark:text-gray-200">{tutor.bio}</p>
               <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-                <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300"><MapPin className="h-4 w-4"/>{tutor!.location}</div>
-                <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300"><Euro className="h-4 w-4"/>{tutor!.price} €/val</div>
+                <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300"><MapPin className="h-4 w-4"/>{tutor.location}</div>
+                <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300"><Euro className="h-4 w-4"/>{tutor.price} €/val</div>
                 <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300"><Clock className="h-4 w-4"/>Atsako per 24 h</div>
               </div>
             </div>
           </div>
 
-          <div className="mt-5 inline-flex rounded-xl border overflow-hidden text-sm">
-            <button className={`px-4 py-2 ${mode==='student'?'bg-black text-white':''}`} onClick={()=>setMode('student')}>Esu mokinys</button>
-            <button className={`px-4 py-2 ${mode==='tutor'?'bg-black text-white':''}`} onClick={()=>setMode('tutor')}>Esu korepetitorius</button>
-          </div>
-
           <div className="mt-4">
-            <CalendarInline mode={mode} availability={availability} onToggle={toggleSlot} onBook={bookSlot} />
+            <CalendarInline availability={tutor.availabilityDemo || {}} onBook={bookSlot} />
           </div>
 
           <div className="mt-5 grid sm:grid-cols-2 gap-2">
             <button className="rounded-xl border px-3 py-2 text-sm">Parašyti žinutę</button>
-            {mode==='student' ? (
-              <button className="rounded-xl bg-black text-white px-3 py-2 text-sm">Tęsti rezervaciją</button>
-            ) : (
-              <button className="rounded-xl bg-black text-white px-3 py-2 text-sm" onClick={()=>alert('Prieinamumas išsaugotas (demo)')}>Išsaugoti prieinamumą</button>
-            )}
+            <button className="rounded-xl bg-black text-white px-3 py-2 text-sm">Tęsti rezervaciją</button>
           </div>
         </motion.div>
       </motion.div>
@@ -290,17 +288,21 @@ function TutorDialog({ tutor, onClose }:{ tutor: typeof TUTORS[number] | null, o
   );
 }
 
-// ---------- signup modal ----------
-function SignupDialog({ open, onClose }:{ open:boolean, onClose:()=>void }){
+// ---------------- signup (with role) ----------------
+function SignupDialog({ open, onClose, onSigned }:{ open:boolean, onClose:()=>void, onSigned:(u:User)=>void }){
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
+  const [role, setRole] = useState<Role>("student");
 
   if(!open) return null;
 
   function submit(e: React.FormEvent){
     e.preventDefault();
-    alert(`Registracija sėkminga: ${name} • ${email}`);
+    const user: User = { name, email, role };
+    saveUser(user);
+    onSigned(user);
+    alert(`Registracija sėkminga: ${name} • ${email} (${role === "teacher" ? "korepetitorius" : "mokinys"})`);
     onClose();
   }
 
@@ -324,6 +326,21 @@ function SignupDialog({ open, onClose }:{ open:boolean, onClose:()=>void }){
               <label className="text-sm">Slaptažodis</label>
               <input type="password" value={pass} onChange={(e)=>setPass(e.target.value)} required className="mt-1 w-full rounded-xl border px-3 py-2 bg-transparent"/>
             </div>
+
+            <div className="pt-2">
+              <div className="text-sm mb-1">Rolė</div>
+              <div className="flex items-center gap-3 text-sm">
+                <label className="inline-flex items-center gap-2">
+                  <input type="radio" name="role" value="student" checked={role==="student"} onChange={()=>setRole("student")} />
+                  Mokinys
+                </label>
+                <label className="inline-flex items-center gap-2">
+                  <input type="radio" name="role" value="teacher" checked={role==="teacher"} onChange={()=>setRole("teacher")} />
+                  Korepetitorius
+                </label>
+              </div>
+            </div>
+
             <button type="submit" className="w-full rounded-xl bg-black text-white px-3 py-2 text-sm">Registruotis</button>
           </form>
         </motion.div>
@@ -332,35 +349,37 @@ function SignupDialog({ open, onClose }:{ open:boolean, onClose:()=>void }){
   );
 }
 
-// ---------- tutor card ----------
-function TutorCard({ tutor, onClick }:{ tutor: typeof TUTORS[number], onClick:()=>void }){
+// ---------------- tutor card (simplified) ----------------
+function TutorCard({ tutor, onPreview, onSignup }:{
+  tutor: typeof TUTORS[number],
+  onPreview: ()=>void,
+  onSignup: ()=>void
+}){
   return (
-    <motion.button type="button" onClick={onClick} initial={{opacity:0, y:8}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.35}} className="text-left rounded-3xl border overflow-hidden bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-black/20">
+    <motion.div initial={{opacity:0, y:8}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.35}} className="rounded-3xl border overflow-hidden bg-white dark:bg-gray-950">
       <div className="p-4 flex items-start gap-4">
         <img src={tutor.avatar} alt={tutor.name} className="h-16 w-16 rounded-2xl object-cover"/>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <h3 className="font-semibold truncate">{tutor.name}</h3>
-            <div className="inline-flex items-center gap-1 text-sm"><Star className="h-4 w-4 fill-yellow-400 text-yellow-400"/><span>{tutor.rating}</span><span className="text-gray-500">({tutor.reviews})</span></div>
+            <div className="inline-flex items-center gap-1 text-sm">
+              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400"/><span>{tutor.rating}</span>
+              <span className="text-gray-500">({tutor.reviews})</span>
+            </div>
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-2"><Badge>{tutor.subject}</Badge>{tutor.levels.map(l=> <Pill key={l}>{l}</Pill>)}</div>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{tutor.bio}</p>
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-            <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300"><MapPin className="h-4 w-4"/>{tutor.location}</div>
-            <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300"><Euro className="h-4 w-4"/>{tutor.price} €/val</div>
-            <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300"><Clock className="h-4 w-4"/>Atsako per 24 h</div>
-          </div>
+          {/* only subject */}
+          <div className="mt-2"><Badge>{tutor.subject}</Badge></div>
         </div>
       </div>
       <div className="px-4 pb-4 flex items-center gap-2">
-        <span className="flex-1 rounded-xl border px-3 py-2 text-sm grid place-items-center">Peržiūrėti</span>
-        <span className="flex-1 rounded-xl bg-black text-white px-3 py-2 text-sm grid place-items-center">Greita peržiūra</span>
+        <button onClick={onPreview} className="flex-1 rounded-xl border px-3 py-2 text-sm">Peržiūrėti</button>
+        <button onClick={onSignup} className="flex-1 rounded-xl bg-black text-white px-3 py-2 text-sm">Registruotis</button>
       </div>
-    </motion.button>
+    </motion.div>
   );
 }
 
-// ---------- features / pricing / faq / footer ----------
+// ---------------- sections ----------------
 function Features(){
   const items = [
     { icon:<CalendarIcon className="h-5 w-5"/>, title:"Integruotas tvarkaraštis", text:"Sinchronizacija su Google/Outlook, automatinės laiko juostos." },
@@ -381,7 +400,6 @@ function Features(){
     </Section>
   );
 }
-
 function Pricing(){
   const plans = [
     { name:"Pradinis", price:0, features:["Naršymas","Saugūs pokalbiai","1 bandomoji pamoka"] },
@@ -403,7 +421,6 @@ function Pricing(){
     </Section>
   );
 }
-
 function FAQ(){
   const faqs = [
     { q:"Kaip vyksta rezervacija?", a:"Pasirenkate laiką korepetitoriaus kalendoriuje. Patvirtinus – gausite priminimus." },
@@ -423,7 +440,6 @@ function FAQ(){
     </Section>
   );
 }
-
 function Footer(){
   return (
     <footer className="border-t">
@@ -452,11 +468,18 @@ function Footer(){
   );
 }
 
-// ---------- main app ----------
+// ---------------- main app ----------------
 export default function App(){
   const [filters, setFilters] = useState({ query:"", subject:"", level:"" });
   const [activeTutor, setActiveTutor] = useState<typeof TUTORS[number] | null>(null);
   const [showSignup, setShowSignup] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  useEffect(()=>{
+    if (typeof window !== "undefined") {
+      setCurrentUser(loadCurrentUser());
+    }
+  },[]);
 
   const filtered = TUTORS.filter(t=>{
     const matchQuery = filters.query ? (t.name+" "+t.subject+" "+t.bio).toLowerCase().includes(filters.query.toLowerCase()) : true;
@@ -467,23 +490,40 @@ export default function App(){
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-50">
-      <NavBar onOpenSignup={()=>setShowSignup(true)}/>
+      <NavBar onOpenSignup={()=>setShowSignup(true)} current={currentUser}/>
       <Hero onSearch={setFilters}/>
+
       <Section id="tutors" title="Populiarūs korepetitoriai" subtitle="Atrinkti pagal įvertinimus ir atsakymo greitį.">
         <div className="grid md:grid-cols-2 gap-4">
           {filtered.length ? (
-            filtered.map(t => <TutorCard key={t.id} tutor={t} onClick={()=>setActiveTutor(t)}/>)
+            filtered.map(t => (
+              <TutorCard
+                key={t.id}
+                tutor={t}
+                onPreview={()=>setActiveTutor(t)}
+                onSignup={()=>setShowSignup(true)}
+              />
+            ))
           ) : (
-            <div className="rounded-3xl border p-8 text-center text-gray-600 dark:text-gray-300"><Filter className="h-5 w-5 mx-auto mb-2"/>Korepetitorių pagal jūsų filtrus nerasta. Pabandykite pakeisti paiešką.</div>
+            <div className="rounded-3xl border p-8 text-center text-gray-600 dark:text-gray-300">
+              <Filter className="h-5 w-5 mx-auto mb-2"/>
+              Korepetitorių pagal jūsų filtrus nerasta. Pabandykite pakeisti paiešką.
+            </div>
           )}
         </div>
       </Section>
+
       <Features/>
       <Pricing/>
       <FAQ/>
       <Footer/>
+
       <TutorDialog tutor={activeTutor} onClose={()=>setActiveTutor(null)}/>
-      <SignupDialog open={showSignup} onClose={()=>setShowSignup(false)}/>
+      <SignupDialog
+        open={showSignup}
+        onClose={()=>setShowSignup(false)}
+        onSigned={(u)=>setCurrentUser(u)}
+      />
     </div>
   );
 }
