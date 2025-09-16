@@ -350,32 +350,54 @@ function SignupDialog({ open, onClose, onSigned }:{ open:boolean, onClose:()=>vo
 }
 
 // ---------------- tutor card (simplified) ----------------
-function TutorCard({ tutor, onPreview, onSignup }:{
+function TutorCard({ tutor, onClick }:{
   tutor: typeof TUTORS[number],
-  onPreview: ()=>void,
-  onSignup: ()=>void
+  onClick: ()=>void
 }){
   return (
-    <motion.div initial={{opacity:0, y:8}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.35}} className="rounded-3xl border overflow-hidden bg-white dark:bg-gray-950">
+    <motion.button
+      type="button"
+      onClick={onClick}
+      initial={{ opacity: 0, y: 8 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.35 }}
+      className="text-left rounded-3xl border overflow-hidden bg-white dark:bg-gray-950 focus:outline-none focus:ring-2 focus:ring-black/20"
+    >
       <div className="p-4 flex items-start gap-4">
         <img src={tutor.avatar} alt={tutor.name} className="h-16 w-16 rounded-2xl object-cover"/>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <h3 className="font-semibold truncate">{tutor.name}</h3>
             <div className="inline-flex items-center gap-1 text-sm">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400"/><span>{tutor.rating}</span>
+              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400"/>
+              <span>{tutor.rating}</span>
               <span className="text-gray-500">({tutor.reviews})</span>
             </div>
           </div>
-          {/* only subject */}
-          <div className="mt-2"><Badge>{tutor.subject}</Badge></div>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <Badge>{tutor.subject}</Badge>
+            {tutor.levels.map(l=> <Pill key={l}>{l}</Pill>)}
+          </div>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{tutor.bio}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+            <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300">
+              <MapPin className="h-4 w-4"/>{tutor.location}
+            </div>
+            <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300">
+              <Euro className="h-4 w-4"/>{tutor.price} €/val
+            </div>
+            <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300">
+              <Clock className="h-4 w-4"/>Atsako per 24 h
+            </div>
+          </div>
         </div>
       </div>
       <div className="px-4 pb-4 flex items-center gap-2">
-        <button onClick={onPreview} className="flex-1 rounded-xl border px-3 py-2 text-sm">Peržiūrėti</button>
-        <button onClick={onSignup} className="flex-1 rounded-xl bg-black text-white px-3 py-2 text-sm">Registruotis</button>
+        <button onClick={onClick} className="flex-1 rounded-xl border px-3 py-2 text-sm">Peržiūrėti</button>
+        <button onClick={onClick} className="flex-1 rounded-xl bg-black text-white px-3 py-2 text-sm">Greita peržiūra</button>
       </div>
-    </motion.div>
+    </motion.button>
   );
 }
 
