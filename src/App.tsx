@@ -78,7 +78,7 @@ const Section = ({ id, title, subtitle, children }:{ id?: string, title: string,
   </section>
 );
 
-function NavBar(){
+function NavBar({ onOpenSignup }: { onOpenSignup: () => void }){
   return (
     <div className="w-full sticky top-0 z-40 border-b bg-white/70 dark:bg-gray-950/70 backdrop-blur">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -94,12 +94,13 @@ function NavBar(){
         </div>
         <div className="flex items-center gap-2">
           <button className="px-3 py-1.5 text-sm rounded-xl border">Prisijungti</button>
-          <button className="px-3 py-1.5 text-sm rounded-xl bg-black text-white">Registruotis</button>
+          <button onClick={onOpenSignup} className="px-3 py-1.5 text-sm rounded-xl bg-black text-white">Registruotis</button>
         </div>
       </div>
     </div>
   );
 }
+
 
 function Hero({ onSearch }:{ onSearch:(v:any)=>void }){
   const [query, setQuery] = useState("");
