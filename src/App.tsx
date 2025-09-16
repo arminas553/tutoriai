@@ -115,47 +115,92 @@ function Hero({ onSearch }:{ onSearch:(v:any)=>void }){
   const [query, setQuery] = useState("");
   const [subject, setSubject] = useState("");
   const [level, setLevel] = useState("");
-  function handleSubmit(e: React.FormEvent){ e.preventDefault(); onSearch({ query, subject, level }); }
+
+  function handleSubmit(e: React.FormEvent){
+    e.preventDefault();
+    onSearch({ query, subject, level });
+  }
+
   return (
     <div className="relative overflow-hidden">
-      <div className="absolute inset-0 -z-10 opacity-50 [mask-image:radial-gradient(50%_50%_at_50%_25%,black,transparent)]">
-        <div className="absolute -top-24 -left-16 h-72 w-72 rounded-full bg-gradient-to-tr from-black via-gray-800 to-gray-400 blur-3xl opacity-20"/>
-        <div className="absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-gradient-to-tr from-gray-900 via-gray-700 to-gray-400 blur-3xl opacity-10"/>
+      {/* a bit more breathing room so the hero fills the screen */}
+      <div className="absolute inset-0 -z-10 opacity-50 [mask-image:radial-gradient(60%_60%_at_50%_20%,black,transparent)]">
+        <div className="absolute -top-36 -left-24 h-96 w-96 rounded-full bg-gradient-to-tr from-black via-gray-800 to-gray-400 blur-3xl opacity-20"/>
+        <div className="absolute -bottom-36 -right-24 h-96 w-96 rounded-full bg-gradient-to-tr from-gray-900 via-gray-700 to-gray-400 blur-3xl opacity-10"/>
       </div>
-      <div className="max-w-6xl mx-auto px-4 py-16 md:py-24">
+
+      <div className="max-w-7xl mx-auto px-4 py-24 md:py-36">
         <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.6 }}>
-          <h1 className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight">Raskite tinkamą korepetitorių per kelias minutes</h1>
-          <p className="mt-3 text-gray-600 dark:text-gray-300 max-w-2xl">Filtruokite pagal dalyką, lygį ir kainą. Rašykite korepetitoriams, rezervuokite pamokas ir mokykitės greičiau.</p>
+          <h1 className="text-4xl md:text-6xl font-semibold tracking-tight leading-tight">
+            Raskite tinkamą korepetitorių per kelias minutes
+          </h1>
+          <p className="mt-4 text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-3xl">
+            Filtruokite pagal dalyką, lygį ir kainą. Rašykite korepetitoriams, rezervuokite pamokas ir mokykitės greičiau.
+          </p>
         </motion.div>
-        <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 md:grid-cols-12 gap-3">
-          <div className="md:col-span-5">
-            <div className="flex items-center gap-2 rounded-2xl border px-3 py-2"><Search className="h-4 w-4"/>
-              <input value={query} onChange={(e)=>setQuery(e.target.value)} className="w-full bg-transparent outline-none text-sm" placeholder="Paieška: algebra, IELTS, Python"/>
+
+        {/* BIG search bar */}
+        <form onSubmit={handleSubmit} className="mt-10 grid grid-cols-1 md:grid-cols-12 gap-4">
+          {/* Query input – wider & taller */}
+          <div className="md:col-span-6">
+            <div className="flex items-center gap-3 rounded-3xl border-2 px-5 h-16">
+              <Search className="h-5 w-5"/>
+              <input
+                value={query}
+                onChange={(e)=>setQuery(e.target.value)}
+                className="w-full bg-transparent outline-none text-base md:text-lg"
+                placeholder="Paieška (pvz., algebra, IELTS, Python)…"
+              />
             </div>
           </div>
+
+          {/* Subject select – bigger */}
           <div className="md:col-span-3">
-            <div className="flex items-center gap-2 rounded-2xl border px-3 py-2"><BookOpen className="h-4 w-4"/>
-              <select value={subject} onChange={(e)=>setSubject(e.target.value)} className="w-full bg-transparent outline-none text-sm">
+            <div className="flex items-center gap-3 rounded-3xl border-2 px-5 h-16">
+              <BookOpen className="h-5 w-5"/>
+              <select
+                value={subject}
+                onChange={(e)=>setSubject(e.target.value)}
+                className="w-full bg-transparent outline-none text-base md:text-lg"
+              >
                 <option value="">Visi dalykai</option>
                 {SUBJECTS.map(s=> <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
           </div>
-          <div className="md:col-span-3">
-            <div className="flex items-center gap-2 rounded-2xl border px-3 py-2"><GraduationCap className="h-4 w-4"/>
-              <select value={level} onChange={(e)=>setLevel(e.target.value)} className="w-full bg-transparent outline-none text-sm">
+
+          {/* Level select – bigger */}
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-3 rounded-3xl border-2 px-5 h-16">
+              <GraduationCap className="h-5 w-5"/>
+              <select
+                value={level}
+                onChange={(e)=>setLevel(e.target.value)}
+                className="w-full bg-transparent outline-none text-base md:text-lg"
+              >
                 <option value="">Visi lygiai</option>
                 {LEVELS.map(l=> <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
           </div>
-          <div className="md:col-span-1 flex"><button type="submit" className="w-full rounded-2xl bg-black text-white text-sm px-4">Ieškoti</button></div>
+
+          {/* Big CTA button */}
+          <div className="md:col-span-1 flex">
+            <button
+              type="submit"
+              className="w-full rounded-3xl h-16 text-base md:text-lg font-medium bg-black text-white"
+            >
+              Ieškoti
+            </button>
+          </div>
         </form>
-        <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-300">
-          <div className="inline-flex items-center gap-1"><ShieldCheck className="h-4 w-4"/> Patikrinti profiliai</div>
-          <div className="inline-flex items-center gap-1"><Users className="h-4 w-4"/> 10k+ mokinių</div>
-          <div className="inline-flex items-center gap-1"><CalendarIcon className="h-4 w-4"/> Momentinis tvarkaraštis</div>
-          <div className="inline-flex items-center gap-1"><MessageCircle className="h-4 w-4"/> Pokalbiai programoje</div>
+
+        {/* Smaller meta row but slightly larger text */}
+        <div className="mt-8 flex flex-wrap items-center gap-4 text-sm md:text-base text-gray-600 dark:text-gray-300">
+          <div className="inline-flex items-center gap-2"><ShieldCheck className="h-5 w-5"/> Patikrinti profiliai</div>
+          <div className="inline-flex items-center gap-2"><Users className="h-5 w-5"/> 10k+ mokinių</div>
+          <div className="inline-flex items-center gap-2"><CalendarIcon className="h-5 w-5"/> Momentinis tvarkaraštis</div>
+          <div className="inline-flex items-center gap-2"><MessageCircle className="h-5 w-5"/> Pokalbiai programoje</div>
         </div>
       </div>
     </div>
