@@ -561,22 +561,21 @@ export default function App(){
       <Hero onSearch={setFilters}/>
 
       <Section id="tutors" title="Populiarūs korepetitoriai" subtitle="Atrinkti pagal įvertinimus ir atsakymo greitį.">
-        <div className="grid md:grid-cols-2 gap-4">
-          {filtered.length ? (
-            filtered.map(t => (
-              <TutorCard
-                key={t.id}
-                tutor={t}
-                onPreview={()=>setActiveTutor(t)}
-                onSignup={()=>setShowSignup(true)}
-              />
-            ))
-          ) : (
-            <div className="rounded-3xl border p-8 text-center text-gray-600 dark:text-gray-300">
-              <Filter className="h-5 w-5 mx-auto mb-2"/>
-              Korepetitorių pagal jūsų filtrus nerasta. Pabandykite pakeisti paiešką.
-            </div>
-          )}
+        {filtered.length ? (
+  filtered.map(t => (
+    <TutorCard
+      key={t.id}
+      tutor={t}
+      onClick={()=>setActiveTutor(t)}
+    />
+  ))
+) : (
+  <div className="rounded-3xl border p-8 text-center text-gray-600 dark:text-gray-300">
+    <Filter className="h-5 w-5 mx-auto mb-2"/>
+    Korepetitorių pagal jūsų filtrus nerasta. Pabandykite pakeisti paiešką.
+  </div>
+)}
+
         </div>
       </Section>
 
