@@ -115,7 +115,6 @@ function Hero({ onSearch }:{ onSearch:(v:any)=>void }){
       </div>
       <div className="max-w-6xl mx-auto px-4 py-16 md:py-24">
         <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.6 }}>
-          <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs mb-4"><Sparkles className="h-4 w-4"/><span>Nauja: greitas rezervavimas ir pokalbiai programoje</span></div>
           <h1 className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight">Raskite tinkamą korepetitorių per kelias minutes</h1>
           <p className="mt-3 text-gray-600 dark:text-gray-300 max-w-2xl">Filtruokite pagal dalyką, lygį ir kainą. Rašykite korepetitoriams, rezervuokite pamokas ir mokykitės greičiau.</p>
         </motion.div>
