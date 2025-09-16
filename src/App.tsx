@@ -239,6 +239,47 @@ function TutorDialog({ tutor, onClose }:{ tutor: typeof TUTORS[number] | null, o
 
   if(!tutor) return null;
 
+  function SignupDialog({ open, onClose }:{ open:boolean, onClose:()=>void }){
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+
+  if(!open) return null;
+
+  function submit(e: React.FormEvent){
+    e.preventDefault();
+    alert(`Registracija sėkminga: ${name} • ${email}`);
+    onClose();
+  }
+
+  return (
+    <AnimatePresence>
+      <motion.div className="fixed inset-0 z-50 flex items-end md:items-center justify-center" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} aria-modal role="dialog">
+        <div className="absolute inset-0 bg-black/40" onClick={onClose}/>
+        <motion.div className="relative z-10 w-full md:max-w-md bg-white dark:bg-gray-950 rounded-t-3xl md:rounded-3xl border p-6" initial={{ y:40, opacity:0 }} animate={{ y:0, opacity:1 }} exit={{ y:40, opacity:0 }}>
+          <button onClick={onClose} className="absolute right-3 top-3 p-2 rounded-xl border" aria-label="Užverti"><X className="h-4 w-4"/></button>
+          <h3 className="text-lg font-semibold mb-4">Sukurti paskyrą</h3>
+          <form onSubmit={submit} className="space-y-3">
+            <div>
+              <label className="text-sm">Vardas</label>
+              <input value={name} onChange={(e)=>setName(e.target.value)} required className="mt-1 w-full rounded-xl border px-3 py-2 bg-transparent"/>
+            </div>
+            <div>
+              <label className="text-sm">El. paštas</label>
+              <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} required className="mt-1 w-full rounded-xl border px-3 py-2 bg-transparent"/>
+            </div>
+            <div>
+              <label className="text-sm">Slaptažodis</label>
+              <input type="password" value={pass} onChange={(e)=>setPass(e.target.value)} required className="mt-1 w-full rounded-xl border px-3 py-2 bg-transparent"/>
+            </div>
+            <button type="submit" className="w-full rounded-xl bg-black text-white px-3 py-2 text-sm">Registruotis</button>
+          </form>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
   function toggleSlot(dayKey: string, time: string){
     if(!dayKey) return;
     if(time==='clear'){ setAvailability(prev=>{ const n={...prev}; delete n[dayKey]; return n; }); return; }
@@ -417,6 +458,7 @@ function Footer(){
 export default function App(){
   const [filters, setFilters] = useState({ query:"", subject:"", level:"" });
   const [activeTutor, setActiveTutor] = useState<typeof TUTORS[number] | null>(null);
+  const [showSignup, setShowSignup] = useState(false);
 
   const filtered = TUTORS.filter(t=>{
     const matchQuery = filters.query ? (t.name+" "+t.subject+" "+t.bio).toLowerCase().includes(filters.query.toLowerCase()) : true;
@@ -427,7 +469,7 @@ export default function App(){
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-50">
-      <NavBar/>
+      <NavBar onOpenSignup={()=>setShowSignup(true)}/>
       <Hero onSearch={setFilters}/>
       <Section id="tutors" title="Populiarūs korepetitoriai" subtitle="Atrinkti pagal įvertinimus ir atsakymo greitį.">
         <div className="grid md:grid-cols-2 gap-4">
@@ -443,6 +485,7 @@ export default function App(){
       <FAQ/>
       <Footer/>
       <TutorDialog tutor={activeTutor} onClose={()=>setActiveTutor(null)}/>
+      <SignupDialog open={showSignup} onClose={()=>setShowSignup(false)}/>
     </div>
   );
 }
